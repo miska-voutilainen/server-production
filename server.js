@@ -22,28 +22,26 @@ const allowedOrigins = [
   "https://www.pizzeria-web.com",
 ];
 
+// CORS Options
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (e.g., Postman, mobile apps, server-to-server)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`); // Helpful for debugging
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  optionsSuccessStatus: 200, // Important for some legacy browsers
+  optionsSuccessStatus: 200,
 };
 
-// Awaken Azure, I want to sleep.
-
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
+// Body Parsers
 app.use(express.json());
 app.use(cookieParser());
 
@@ -51,6 +49,11 @@ app.use(cookieParser());
 const pool = await connectDB();
 const sessionService = createSessionService(pool);
 app.use(sessionService.sessionMiddleware);
+
+// Health Check Endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 // Routes
 app.use("/api/auth", createAuthRouter(pool, sessionService));
@@ -61,13 +64,21 @@ app.use("/api/coupons", createCouponRouter(pool));
 app.use("/api/newsletter", createNewsletterRouter(pool));
 app.use("/api/ingredients", createIngredientsRouter(pool));
 
-// Global Error Handler
+// 404 Handler
+app.all("*", (req, res, next) => {
+  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  err.statusCode = 404;
+  next(err);
+});
+
+// Use your existing errorHandler middleware (assumes it handles CORS headers on errors too)
 app.use(errorHandler);
 
-// Critical for Azure App Service
+// Critical for Azure
 const PORT = process.env.PORT || 3001;
-const HOST = "0.0.0.0"; // Required on Azure to accept external connections
+const HOST = "0.0.0.0";
 
+// Start Server
 app.listen(PORT, HOST, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
