@@ -65,7 +65,7 @@ app.use("/api/newsletter", createNewsletterRouter(pool));
 app.use("/api/ingredients", createIngredientsRouter(pool));
 
 // 404 Handler
-app.all("*", (req, res, next) => {
+app.use((req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);
   err.statusCode = 404;
   next(err);
