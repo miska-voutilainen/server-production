@@ -65,14 +65,32 @@ app.use("/api/newsletter", createNewsletterRouter(pool));
 app.use("/api/ingredients", createIngredientsRouter(pool));
 
 // 404 Handler
+
+// 404 Handler with CORS fallback
 app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Cookie"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);
   err.statusCode = 404;
   next(err);
 });
 
-// Use your existing errorHandler middleware (assumes it handles CORS headers on errors too)
-app.use(errorHandler);
+// Error handler with CORS fallback
+app.use((err, req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Cookie"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  errorHandler(err, req, res, next);
+});
 
 // Critical for Azure
 const PORT = process.env.PORT || 3001;
