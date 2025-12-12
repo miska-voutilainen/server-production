@@ -40,6 +40,8 @@ const corsOptions = {
   optionsSuccessStatus: 200, // Important for some legacy browsers
 };
 
+// Awaken Azure, I want to sleep.
+
 app.use(cors(corsOptions));
 
 app.use(express.json());
