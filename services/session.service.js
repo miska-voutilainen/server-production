@@ -61,8 +61,8 @@ export default function createSessionService(pool) {
 
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true, // Always true for cross-site cookies
+      sameSite: "none", // Must be "none" for cross-site
       path: "/",
       maxAge: MAX_AGE,
     });
@@ -78,8 +78,8 @@ export default function createSessionService(pool) {
     }
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
     });
   };
